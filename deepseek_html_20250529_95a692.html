@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>El Buen Profesor: Atrapa las Cualidades</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: 'Arial Rounded MT Bold', 'Arial', sans-serif;
+            background-color: #f9f7fe;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #6a4c93;
+            margin-bottom: 5px;
+        }
+        .subtitle {
+            color: #8a6d9e;
+            margin-top: 0;
+            font-size: 16px;
+        }
+        #game-container {
+            width: 320px;
+            height: 450px;
+            margin: 10px auto;
+            position: relative;
+            background: linear-gradient(to bottom, #e0f7fa, #b2ebf2);
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        #header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #6a4c93;
+            color: white;
+            border-radius: 15px 15px 0 0;
+        }
+        #score, #timer {
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #game {
+            width: 100%;
+            height: 380px;
+            position: relative;
+        }
+        #player {
+            width: 70px;
+            height: 25px;
+            background-color: #ff8a65;
+            position: absolute;
+            bottom: 20px;
+            left: 125px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s;
+        }
+        .quality {
+            width: 80px;
+            height: 25px;
+            position: absolute;
+            text-align: center;
+            font-size: 12px;
+            padding: 5px;
+            border-radius: 12px;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        .positive {
+            background-color: #66bb6a;
+            color: white;
+        }
+        .negative {
+            background-color: #ef5350;
+            color: white;
+        }
+        #start-btn {
+            background-color: #6a4c93;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: background 0.3s;
+        }
+        #start-btn:hover {
+            background-color: #8a6d9e;
+        }
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 10;
+            max-width: 80%;
+        }
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            opacity: 0.7;
+            z-index: 5;
+        }
+    </style>
+</head>
+<body>
+    <h1>El Buen Profesor</h1>
+    <p class="subtitle">Atrapa las cualidades positivas y evita las negativas</p>
+    
+    <div id="game-container">
+        <div id="header">
+            <div id="score">⭐ Puntos: 0</div>
+            <div id="timer">⏱️ Tiempo: 30</div>
+        </div>
+        <div id="game">
+            <div id="player"></div>
+            <div id="message"></div>
+        </div>
+    </div>
+    <button id="start-btn" onclick="startGame()">Comenzar Juego</button>
+
+    <script>
+        const player = document.getElementById("player");
+        const game = document.getElementById("game");
+        const scoreDisplay = document.getElementById("score");
+        const timerDisplay = document.getElementById("timer");
+        const startBtn = document.getElementById("start-btn");
+        const messageBox = document.getElementById("message");
+        let score = 0;
+        let timeLeft = 30;
+        let gameInterval;
+        let timerInterval;
+
+        // Lista ampliada de cualidades
+        const positiveQualities = [
+            "Paciente", "Creativo", "Justo", "Motivador", "Empático", 
+            "Organizado", "Respetuoso", "Innovador", "Accesible", "Inspirador",
+            "Tolerante", "Comunicativo", "Flexible", "Responsable", "Apasionado",
+            "Colaborativo", "Persistente", "Observador", "Divertido", "Actualizado"
+        ];
+        const negativeQualities = [
+            "Impuntual", "Autoritario", "Desorganizado", "Poco claro", "Indiferente",
+            "Sarcástico", "Favoritista", "Monótono", "Rígido", "Desmotivado",
+            "Inaccesible", "Pasivo", "Injusto", "Irrespetuoso", "Anticuado"
+        ];
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            scoreDisplay.textContent = "⭐ Puntos: " + score;
+            timerDisplay.textContent = "⏱️ Tiempo: " + timeLeft;
+            messageBox.style.display = "none";
+            startBtn.disabled = true;
+            startBtn.textContent = "Jugando...";
+            
+            // Limpiar cualidades anteriores
+            document.querySelectorAll(".quality").forEach(q => q.remove());
+            
+            // Mover jugador con el mouse
+            game.addEventListener("mousemove", movePlayer);
+            
+            // Generar cualidades cada 0.8 segundos (más rápido)
+            gameInterval = setInterval(createQuality, 800);
+            
+            // Temporizador
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = "⏱️ Tiempo: " + timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function movePlayer(e) {
+            const gameRect = game.getBoundingClientRect();
+            const playerX = e.clientX - gameRect.left - 35;
+            if (playerX > 10 && playerX < gameRect.width - 80) {
+                player.style.left = playerX + "px";
+            }
+        }
+
+        function createQuality() {
+            const quality = document.createElement("div");
+            const isPositive = Math.random() > 0.6; // 60% probabilidad de cualidad positiva
+            const qualities = isPositive ? positiveQualities : negativeQualities;
+            const randomQuality = qualities[Math.floor(Math.random() * qualities.length)];
+            
+            quality.className = isPositive ? "quality positive" : "quality negative";
+            quality.textContent = randomQuality;
+            
+            const xPos = Math.random() * (game.offsetWidth - 80);
+            quality.style.left = xPos + "px";
+            quality.style.top = "-30px";
+            
+            game.appendChild(quality);
+            
+            let fallInterval = setInterval(() => {
+                const currentTop = parseInt(quality.style.top);
+                quality.style.top = (currentTop + 4) + "px";
+                
+                // Detectar colisión con el jugador
+                if (currentTop + 30 >= game.offsetHeight - 50 && 
+                    parseInt(quality.style.left) + 40 >= parseInt(player.style.left) && 
+                    parseInt(quality.style.left) <= parseInt(player.style.left) + 70) {
+                    
+                    if (isPositive) {
+                        score++;
+                        quality.style.transform = "scale(1.2)";
+                        setTimeout(() => quality.remove(), 100);
+                    } else {
+                        score--;
+                        quality.style.transform = "scale(1.2) rotate(180deg)";
+                        setTimeout(() => quality.remove(), 100);
+                    }
+                    
+                    scoreDisplay.textContent = "⭐ Puntos: " + score;
+                    clearInterval(fallInterval);
+                    
+                    // Efecto visual al atrapar
+                    player.style.transform = "scale(1.1)";
+                    setTimeout(() => player.style.transform = "scale(1)", 200);
+                }
+                
+                // Eliminar si llega al fondo sin ser atrapada
+                if (currentTop > game.offsetHeight) {
+                    clearInterval(fallInterval);
+                    quality.remove();
+                }
+            }, 30);
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            clearInterval(timerInterval);
+            game.removeEventListener("mousemove", movePlayer);
+            startBtn.disabled = false;
+            startBtn.textContent = "Jugar de Nuevo";
+            
+            // Mensaje didáctico final
+            let message = "";
+            if (score >= 15) {
+                message = "¡Excelente! Eres un profesor ejemplar 🌟. Sigue practicando estas cualidades en el aula.";
+            } else if (score >= 5) {
+                message = "¡Buen trabajo! Tienes cualidades positivas, pero aún hay áreas para mejorar 💪.";
+            } else {
+                message = "¡Sigue practicando! Revisa las cualidades negativas para evitarlas en tu enseñanza 📚.";
+            }
+            
+            messageBox.innerHTML = `<h3>Puntuación: ${score}</h3><p>${message}</p>`;
+            messageBox.style.display = "block";
+            
+            // Efecto de confeti si el puntaje es alto
+            if (score > 10) {
+                createConfetti();
+            }
+        }
+
+        function createConfetti() {
+            const colors = ["#f44336", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#2196f3", "#03a9f4", "#00bcd4", "#009688", "#4caf50", "#8bc34a", "#cddc39", "#ffeb3b", "#ffc107", "#ff9800", "#ff5722"];
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement("div");
+                confetti.className = "confetti";
+                confetti.style.left = Math.random() * game.offsetWidth + "px";
+                confetti.style.top = Math.random() * game.offsetHeight + "px";
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+                game.appendChild(confetti);
+                
+                // Animación
+                let angle = 0;
+                let speed = Math.random() * 3 + 2;
+                let fallInterval = setInterval(() => {
+                    angle += 0.1;
+                    const currentTop = parseInt(confetti.style.top);
+                    confetti.style.top = (currentTop + speed) + "px";
+                    confetti.style.left = parseInt(confetti.style.left) + Math.sin(angle) * 2 + "px";
+                    
+                    if (currentTop > game.offsetHeight) {
+                        clearInterval(fallInterval);
+                        confetti.remove();
+                    }
+                }, 30);
+            }
+        }
+    </script>
+</body>
+</html>
